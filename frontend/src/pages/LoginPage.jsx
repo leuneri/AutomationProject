@@ -22,6 +22,18 @@ export default function LoginPage() {
     }
   }
 
+    async function handleDemo() {
+    setError(""); setLoading(true);
+    try {
+      await login("demo@example.com", "password");
+      nav("/products");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="form-card">
       <h2>Sign in</h2>
@@ -41,6 +53,10 @@ export default function LoginPage() {
           {loading ? "Signing in…" : "Sign in"}
         </button>
       </form>
+      <hr style={{ margin: "1.25rem 0", borderColor: "var(--border)" }} />
+      <button className="btn btn-ghost" style={{ width: "100%" }} onClick={handleDemo} disabled={loading}>
+        Try demo account
+      </button>
       <p className="form-footer">
         No account? <Link to="/register">Register</Link>
       </p>

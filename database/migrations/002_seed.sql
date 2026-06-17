@@ -10,3 +10,8 @@ INSERT INTO products (name, description, price, stock, category, image_url) VALU
   ('Running Shoes',        'Lightweight mesh upper, EU 38-47',     79.99,  40, 'Sports',      'https://placehold.co/400x400?text=Shoes'),
   ('Yoga Mat',             '6mm thick, non-slip surface',          34.99,  70, 'Sports',      'https://placehold.co/400x400?text=Yoga+Mat'),
   ('Coffee Grinder',       'Burr grinder, 15 grind settings',      59.99,  25, 'Kitchen',     'https://placehold.co/400x400?text=Grinder');
+
+INSERT INTO users (email, password, name, role) VALUES
+  ('user@example.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'User1', 'customer'),
+  ('demo@example.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Demo User', 'customer') -- password is "password"
+  ON CONFLICT (email) DO NOTHING;
