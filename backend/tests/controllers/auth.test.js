@@ -5,10 +5,22 @@ const db = require("../../src/config/db");
 const { validationResult } = require("express-validator");
 
 // Mock dependencies
-jest.mock("../src/config/db");
+jest.mock("../../src/config/db");
 jest.mock("bcryptjs");
 jest.mock("jsonwebtoken");
-jest.mock("express-validator");
+jest.mock("express-validator", () => {
+  const chain = {
+    isEmail: () => chain,
+    normalizeEmail: () => chain,
+    isLength: () => chain,
+    trim: () => chain,
+    notEmpty: () => chain,
+  };
+  return {
+    body: () => chain,
+    validationResult: jest.fn(),
+  };
+});
 
 // Mock response object
 const mockRes = () => {
@@ -28,8 +40,8 @@ describe("register", () => {
     });
 
     const req = { body: {} };
-    const res = mockRes();
-    const next = jest.fn();
+    const res = mockRes(); // mock response
+    const next = jest.fn(); // spy
 
     await register(req, res, next);
 
@@ -105,5 +117,24 @@ describe("register", () => {
     const insertCall = db.query.mock.calls[0];
     expect(insertCall[1][1]).toBe("hashed_password");
     expect(insertCall[1][1]).not.toBe("plaintext");
+  });
+
+  test('signing failure with JWT should call next with error', async () => {
+    validationResult.mockReturnValue({ isEmpty: () => true });
+    bcrypt.hash.mockResolvedValue("hashed_password");
+    db.query.mockResolvedValue({
+      rows: [{ id: "user-1", email: "test@test.com", name: "Test", role: "customer" }],
+    });
+    const jwtError = new Error("jwt signing failed");
+    jwt.sign.mockImplementation(() => { throw jwtError; });
+
+    const req = { body: { email: "test@test.com", password: "password123", name: "Test" } };
+    const res = mockRes();
+    const next = jest.fn();
+
+    await register(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(jwtError);
+    expect(res.status).not.toHaveBeenCalledWith(201);
   });
 });
