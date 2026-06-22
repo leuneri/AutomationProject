@@ -1,4 +1,4 @@
-const { register, login } = require("../../src/controllers/auth");
+const { register, login, me } = require("../../src/controllers/auth");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const db = require("../../src/config/db");
@@ -352,5 +352,70 @@ describe("login", () => {
         token: "token",
         user: { id: "user-1", email: "test@test.com", name: "Test", role: "customer" }
       });
+    });
+
+    describe("login validation through me", () => {
+      test("returns 404 if user not found", async () => {
+        db.query.mockResolvedValue({
+          rows: [],
+        });
+
+        const req = { user: { id: "user-1" } };
+        const res = mockRes();
+        const next = jest.fn();
+
+        await me(req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.json).toHaveBeenCalledWith({ error: "User not found" });
+      });
+    });
+
+    test("calls next with error on unexpected DB failure", async () => {
+      const dbError = new Error("connection lost");
+      db.query.mockRejectedValue(dbError);
+
+      const req = { user: { id: "user-1" } };
+      const res = mockRes();
+      const next = jest.fn();
+
+      await me(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(dbError);
+    });
+
+    test("returns user data without password on successful me request", async () => {
+      db.query.mockResolvedValue({
+        rows: [{ id: "user-1", email: "test@test.com", name: "Test", role: "customer" }],
+      });
+
+      const req = { user: { id: "user-1" } };
+      const res = mockRes();
+      const next = jest.fn();
+
+      await me(req, res, next);
+
+      expect(res.json).toHaveBeenCalledWith({
+        email: "test@test.com",
+        id: "user-1",
+        name: "Test",
+        role: "customer",
+      });
+    });
+
+    test("queries DB with correct user id", async () => {
+      db.query.mockResolvedValue({
+        rows: [{ id: "user-1", email: "test@test.com", name: "Test", role: "customer" }],
+      });
+
+      const req = { user: { id: "user-1" } };
+      const res = mockRes();
+
+      await me(req, res, jest.fn());
+
+      expect(db.query).toHaveBeenCalledWith(
+        expect.any(String),
+        ["user-1"]
+      );
     });
 });
