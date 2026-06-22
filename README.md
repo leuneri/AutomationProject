@@ -5,6 +5,7 @@ Learning to build out test automation end to end.
 Types of testing:
 - E2E Testing
 - Integration Testing
+- Unit Testing
 - Contract testing (Frontend + backend)
 - Performance and Load testing
 
@@ -57,3 +58,6 @@ K6 -> smoke tests, load test, stress test, spike test
 - Architecture diagram
 - Defect reports
 - Root-cause analyses
+
+TODO:
+- change Jest unit tests from JavaScript to Unit tests

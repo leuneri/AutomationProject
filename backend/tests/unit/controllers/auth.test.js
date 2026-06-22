@@ -1,7 +1,7 @@
-const { register, login, me } = require("../../src/controllers/auth");
+const { register, login, me } = require("../../../src/controllers/auth");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const db = require("../../src/config/db");
+const db = require("../../../src/config/db");
 const { validationResult } = require("express-validator");
 
 // Mock dependencies
