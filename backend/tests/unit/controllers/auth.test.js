@@ -5,7 +5,7 @@ const db = require("../../../src/config/db");
 const { validationResult } = require("express-validator");
 
 // Mock dependencies
-jest.mock("../../src/config/db");
+jest.mock("../../../src/config/db");
 jest.mock("bcryptjs");
 jest.mock("jsonwebtoken");
 jest.mock("express-validator", () => {
