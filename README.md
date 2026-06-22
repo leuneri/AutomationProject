@@ -61,3 +61,4 @@ K6 -> smoke tests, load test, stress test, spike test
 
 TODO:
 - change Jest unit tests from JavaScript to Unit tests
+- Add instructions on how to run tests at the end of everything
