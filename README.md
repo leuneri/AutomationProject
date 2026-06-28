@@ -60,5 +60,20 @@ K6 -> smoke tests, load test, stress test, spike test
 - Root-cause analyses
 
 TODO:
-- change Jest unit tests from JavaScript to Unit tests
+- change Jest unit tests from JavaScript to Typescript
 - Add instructions on how to run tests at the end of everything
+
+
+Run backend integration tests:
+- `python3 -m venv venv`
+- `source venv/bin/activate`
+- `python -m pip install --upgrade pip`
+- `pip install -r requirements.txt`
+- `python -m pytest tests/integration -v`
+
+
+Cleanup:
+- `deactivate`
+- `rm -rf venv`
+
+Test for localization
