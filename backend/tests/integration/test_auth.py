@@ -54,13 +54,16 @@ def test_register_returns_no_password(unique_email):
     assert response.status_code == 201
     assert "password" not in response.json()
 
-def test_register_returns_name_and_role(unique_email):
+def test_register_returns_user_data(unique_email):
     response = httpx.post(f"{BASE_URL}/api/auth/register", json={
         "email": unique_email,
         "password": "password123",
         "name": "Test User"
     })
     assert response.status_code == 201
+    assert "user" in response.json()
+    assert "id" in response.json()["user"]
+    assert "email" in response.json()["user"]
     assert "name" in response.json()["user"]
     assert response.json()["user"]["name"] == "Test User"
     assert "role" in response.json()["user"]
@@ -110,9 +113,49 @@ def test_register_duplicate_email(unique_email):
 
 
 # Tests Login Endpoint
-def test_login_wrong_password(unique_email):
+def test_login_wrong_password(registered_user, unique_email):
     response = httpx.post(f"{BASE_URL}/api/auth/login", json={
         "email": unique_email,
         "password": "wrongpassword"
     })
     assert response.status_code == 401
+
+def test_login_wrong_email(registered_user):
+    response = httpx.post(f"{BASE_URL}/api/auth/login", json={
+        "email": "wrongemail@example.com",
+        "password": "password123"
+    })
+    assert response.status_code == 401
+
+def test_login_returns_token(registered_user, unique_email):
+    response = httpx.post(f"{BASE_URL}/api/auth/login", json={
+        "email": unique_email,
+        "password": "password123"
+    })
+    assert response.status_code == 200
+    assert "token" in response.json()
+
+def test_login_returns_no_password(registered_user, unique_email):
+    response = httpx.post(f"{BASE_URL}/api/auth/login", json={
+        "email": unique_email,
+        "password": "password123"
+    })
+    assert response.status_code == 200
+    assert "password" not in response.json()
+
+def test_login_returns_user_data(registered_user, unique_email):
+    response = httpx.post(f"{BASE_URL}/api/auth/login", json={
+        "email": unique_email,
+        "password": "password123"
+    })
+    assert response.status_code == 200
+    assert "user" in response.json()
+    assert "id" in response.json()["user"]
+    assert "email" in response.json()["user"]
+    assert "name" in response.json()["user"]
+    assert response.json()["user"]["name"] == "Test User"
+    assert "role" in response.json()["user"]
+    assert response.json()["user"]["role"] == "customer"
+
+# Tests Me Endpoint
+    
