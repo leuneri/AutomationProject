@@ -1,79 +1,22 @@
 # Automation Project
 
-Learning to build out test automation end to end.
-
-Types of testing:
-- E2E Testing
-- Integration Testing
-- Unit Testing
+Learning to build out test automation end to end from scratch.
+- E2E Testing (Playwright with custom framework)
+- Integration Testing (PyTest with custom fixtures)
+- Unit Testing (Jest)
 - Contract testing (Frontend + backend)
-- Performance and Load testing
+- Performance and Load testing (K6)
+- CI/CD pipeline (Github Actions)
+- Reporting through Monitoring and Dashboards (Prometheus and Grafana)
+- Documentation
 
-
-1. Test Framework
-Things to custom-make for test framework:
-- Custom fixtures
-- Retry logic
-- Data factories
-- Test tagging
-- Environment configuration (cross-browsers)
-- Visual UI testing
-
-tests/
-├── api/
-├── ui/
-├── fixtures/
-├── data/
-├── pages/
-├── helpers/
-└── reports/
-
-2. CI/CD Pipeline
-Pull Request
-    ↓
-Lint
-    ↓
-Unit Tests
-    ↓
-API Tests
-    ↓
-UI Tests
-    ↓
-Performance Smoke Test
-    ↓
-Publish Report
-
-3. Monitoring and Dashboards
-- Structured logging
-- Request IDs
-- Grafana dashboard
-- Prometheus metrics
-
-4. Performance Testing
-K6 -> smoke tests, load test, stress test, spike test
-
-5. Documentation
-- Test strategy
-- Risk assessment
-- Architecture diagram
-- Defect reports
-- Root-cause analyses
-
-TODO:
-- change Jest unit tests from JavaScript to Typescript
-- Add instructions on how to run tests at the end of everything
-
-
-Run backend integration tests:
+### Run backend integration tests:
 - `python3 -m venv venv`
 - `source venv/bin/activate`
 - `python -m pip install --upgrade pip`
 - `pip install -r requirements.txt`
 - `python -m pytest backend/tests/integration -v`
 
-
-Cleanup:
+### Cleanup:
 - `deactivate`
 - `rm -rf venv`
-
-Test for localization
