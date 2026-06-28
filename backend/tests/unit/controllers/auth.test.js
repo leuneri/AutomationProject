@@ -295,127 +295,127 @@ describe("login", () => {
     expect(res.status).not.toHaveBeenCalledWith(200);
   });
 
-    test("returns token and user on successful login", async () => {
-      validationResult.mockReturnValue({ isEmpty: () => true });
-      db.query.mockResolvedValue({
-        rows: [{ id: "user-1", email: "test@test.com", password: "hashed_password", name: "Test", role: "customer" }],
-      });
-      bcrypt.compare.mockResolvedValue(true);
-      jwt.sign.mockReturnValue("mocked_jwt_token");
+  test("returns token and user on successful login", async () => {
+    validationResult.mockReturnValue({ isEmpty: () => true });
+    db.query.mockResolvedValue({
+      rows: [{ id: "user-1", email: "test@test.com", password: "hashed_password", name: "Test", role: "customer" }],
+    });
+    bcrypt.compare.mockResolvedValue(true);
+    jwt.sign.mockReturnValue("mocked_jwt_token");
 
-      const req = { body: { email: "test@test.com", password: "password123" } };
-      const res = mockRes();
-      const next = jest.fn();
+    const req = { body: { email: "test@test.com", password: "password123" } };
+    const res = mockRes();
+    const next = jest.fn();
 
-      await login(req, res, next);
+    await login(req, res, next);
 
-      expect(res.json).toHaveBeenCalledWith({
-        token: "mocked_jwt_token",
-        user: { id: "user-1", email: "test@test.com", name: "Test", role: "customer" }
-      });
+    expect(res.json).toHaveBeenCalledWith({
+      token: "mocked_jwt_token",
+      user: { id: "user-1", email: "test@test.com", name: "Test", role: "customer" }
+    });
+  });
+
+  // Basic security API testing
+  test("never returns password hash in the response", async () => {
+    validationResult.mockReturnValue({ isEmpty: () => true });
+    db.query.mockResolvedValue({
+      rows: [{ id: "user-1", email: "test@test.com", password: "hashed_password", name: "Test", role: "customer" }],
+    });
+    bcrypt.compare.mockResolvedValue(true);
+    jwt.sign.mockReturnValue("mocked_jwt_token");
+
+    const req = { body: { email: "test@test.com", password: "password123" } };
+    const res = mockRes();
+
+    await login(req, res, jest.fn());
+
+    const responseBody = res.json.mock.calls[0][0];
+    expect(responseBody.user).not.toHaveProperty("password");
+  });
+
+  // mocked password passing, so test password has
+  test("compares submitted password against stored hash", async () => {
+    validationResult.mockReturnValue({ isEmpty: () => true });
+    db.query.mockResolvedValue({
+      rows: [{ id: "user-1", email: "test@test.com", password: "hashed_password", name: "Test", role: "customer" }],
+    });
+    bcrypt.compare.mockResolvedValue(true);
+    jwt.sign.mockReturnValue("token");
+
+    const req = { body: { email: "test@test.com", password: "password123" } };
+    const res = mockRes();
+
+    await login(req, res, jest.fn());
+
+    expect(bcrypt.compare).toHaveBeenCalledWith("password123", "hashed_password");
+    expect(res.json).toHaveBeenCalledWith({
+      token: "token",
+      user: { id: "user-1", email: "test@test.com", name: "Test", role: "customer" }
+    });
+  });
+});
+
+describe("login validation through me", () => {
+  test("returns 404 if user not found", async () => {
+    db.query.mockResolvedValue({
+      rows: [],
     });
 
-    // Basic security API testing
-    test("never returns password hash in the response", async () => {
-      validationResult.mockReturnValue({ isEmpty: () => true });
-      db.query.mockResolvedValue({
-        rows: [{ id: "user-1", email: "test@test.com", password: "hashed_password", name: "Test", role: "customer" }],
-      });
-      bcrypt.compare.mockResolvedValue(true);
-      jwt.sign.mockReturnValue("mocked_jwt_token");
+    const req = { user: { id: "user-1" } };
+    const res = mockRes();
+    const next = jest.fn();
 
-      const req = { body: { email: "test@test.com", password: "password123" } };
-      const res = mockRes();
+    await me(req, res, next);
 
-      await login(req, res, jest.fn());
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ error: "User not found" });
+  });
 
-      const responseBody = res.json.mock.calls[0][0];
-      expect(responseBody.user).not.toHaveProperty("password");
+  test("calls next with error on unexpected DB failure", async () => {
+    const dbError = new Error("connection lost");
+    db.query.mockRejectedValue(dbError);
+
+    const req = { user: { id: "user-1" } };
+    const res = mockRes();
+    const next = jest.fn();
+
+    await me(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(dbError);
+  });
+
+  test("returns user data without password on successful me request", async () => {
+    db.query.mockResolvedValue({
+      rows: [{ id: "user-1", email: "test@test.com", name: "Test", role: "customer" }],
     });
 
-    // mocked password passing, so test password has
-    test("compares submitted password against stored hash", async () => {
-      validationResult.mockReturnValue({ isEmpty: () => true });
-      db.query.mockResolvedValue({
-        rows: [{ id: "user-1", email: "test@test.com", password: "hashed_password", name: "Test", role: "customer" }],
-      });
-      bcrypt.compare.mockResolvedValue(true);
-      jwt.sign.mockReturnValue("token");
+    const req = { user: { id: "user-1" } };
+    const res = mockRes();
+    const next = jest.fn();
 
-      const req = { body: { email: "test@test.com", password: "password123" } };
-      const res = mockRes();
+    await me(req, res, next);
 
-      await login(req, res, jest.fn());
+    expect(res.json).toHaveBeenCalledWith({
+      email: "test@test.com",
+      id: "user-1",
+      name: "Test",
+      role: "customer",
+    });
+  });
 
-      expect(bcrypt.compare).toHaveBeenCalledWith("password123", "hashed_password");
-      expect(res.json).toHaveBeenCalledWith({
-        token: "token",
-        user: { id: "user-1", email: "test@test.com", name: "Test", role: "customer" }
-      });
+  test("queries DB with correct user id", async () => {
+    db.query.mockResolvedValue({
+      rows: [{ id: "user-1", email: "test@test.com", name: "Test", role: "customer" }],
     });
 
-    describe("login validation through me", () => {
-      test("returns 404 if user not found", async () => {
-        db.query.mockResolvedValue({
-          rows: [],
-        });
+    const req = { user: { id: "user-1" } };
+    const res = mockRes();
 
-        const req = { user: { id: "user-1" } };
-        const res = mockRes();
-        const next = jest.fn();
+    await me(req, res, jest.fn());
 
-        await me(req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.json).toHaveBeenCalledWith({ error: "User not found" });
-      });
-    });
-
-    test("calls next with error on unexpected DB failure", async () => {
-      const dbError = new Error("connection lost");
-      db.query.mockRejectedValue(dbError);
-
-      const req = { user: { id: "user-1" } };
-      const res = mockRes();
-      const next = jest.fn();
-
-      await me(req, res, next);
-
-      expect(next).toHaveBeenCalledWith(dbError);
-    });
-
-    test("returns user data without password on successful me request", async () => {
-      db.query.mockResolvedValue({
-        rows: [{ id: "user-1", email: "test@test.com", name: "Test", role: "customer" }],
-      });
-
-      const req = { user: { id: "user-1" } };
-      const res = mockRes();
-      const next = jest.fn();
-
-      await me(req, res, next);
-
-      expect(res.json).toHaveBeenCalledWith({
-        email: "test@test.com",
-        id: "user-1",
-        name: "Test",
-        role: "customer",
-      });
-    });
-
-    test("queries DB with correct user id", async () => {
-      db.query.mockResolvedValue({
-        rows: [{ id: "user-1", email: "test@test.com", name: "Test", role: "customer" }],
-      });
-
-      const req = { user: { id: "user-1" } };
-      const res = mockRes();
-
-      await me(req, res, jest.fn());
-
-      expect(db.query).toHaveBeenCalledWith(
-        expect.any(String),
-        ["user-1"]
-      );
-    });
+    expect(db.query).toHaveBeenCalledWith(
+      expect.any(String),
+      ["user-1"]
+    );
+  });
 });
