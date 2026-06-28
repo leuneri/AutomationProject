@@ -48,6 +48,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Start services
+        run: docker compose up -d
+      - name: Wait for backend to be ready
+        run: |
+          for i in {1..30}; do
+            curl -sf http://localhost:4000/health && break
+            echo "Waiting..."
+            sleep 2
+          done
+
       - name: Run integration tests
         working-directory: backend
         run: python -m pytest tests/integration -v
