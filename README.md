@@ -69,7 +69,7 @@ Run backend integration tests:
 - `source venv/bin/activate`
 - `python -m pip install --upgrade pip`
 - `pip install -r requirements.txt`
-- `python -m pytest tests/integration -v`
+- `python -m pytest backend/tests/integration -v`
 
 
 Cleanup:
